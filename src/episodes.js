@@ -1,6 +1,6 @@
-const axios = require('axios')
 const cheerio = require('cheerio')
 const { getResultsFromSearch } = require('./info.js')
+const request = require('request')
 
 const BASE_URI = 'https://myanimelist.net/anime/'
 
@@ -26,26 +26,31 @@ const parsePage = ($) => {
 
 const searchPage = (url, offset = 0, res = []) => {
   return new Promise((resolve, reject) => {
-    axios.get(url, {
-      params: {
+    request({
+      method: 'GET',
+      url,
+      tunnel: false,
+      proxy: 'http://localhost:8888',
+      qs: {
         offset
       }
+    }, (err, response, data) => {
+      if (err) {
+        reject(err)
+      }
+      const $ = cheerio.load(data)
+
+      const tmpRes = parsePage($)
+      res = res.concat(tmpRes)
+
+      if (tmpRes.length) {
+        searchPage(url, offset + 100, res)
+          .then((data) => resolve(data))
+          .catch(/* istanbul ignore next */(err) => reject(err))
+      } else {
+        resolve(res)
+      }
     })
-      .then(({ data }) => {
-        const $ = cheerio.load(data)
-
-        const tmpRes = parsePage($)
-        res = res.concat(tmpRes)
-
-        if (tmpRes.length) {
-          searchPage(url, offset + 100, res)
-            .then((data) => resolve(data))
-            .catch(/* istanbul ignore next */(err) => reject(err))
-        } else {
-          resolve(res)
-        }
-      })
-      .catch(/* istanbul ignore next */(err) => reject(err))
   })
 }
 
