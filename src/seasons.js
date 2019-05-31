@@ -23,16 +23,21 @@ const type2Class = {
 
 const getType = (type, $) => {
   const result = []
-  let classToSearch = `.js-seasonal-anime-list-key-${type2Class[type]} .seasonal-anime.js-seasonal-anime`
-  let typeClass = `.js-seasonal-anime-list-key-${type2Class[type]}`
 
   //If TV has been selected, filter New from Continuing.
   const typeString = matchSorter(possibleTypes, type)[0];
-  if (typeString === 'TV (New)') {
-    classToSearch = $(typeClass).children('.anime-header').first().parent().children();
-  }
-  else if (typeString === 'TV (Continuing)') {
-    classToSearch = $(typeClass).children('.anime-header').first().parent().children();
+
+  let classToSearch = `.js-seasonal-anime-list-key-${type2Class[typeString]} .seasonal-anime.js-seasonal-anime`
+  let typeClass = `.js-seasonal-anime-list-key-${type2Class[typeString]}`
+
+  //Filter TV to New and Continuing
+  if (typeString.substr(0, 2) === 'TV') {
+    let tvType = matchSorter(possibleTV, typeString)[0];
+    $(typeClass).children('.anime-header').each(function () {
+      if ($(this).text() === tvType) {
+        classToSearch = $(this).parent().children();
+      }
+    })
   }
 
   $(classToSearch).each(function () {
@@ -62,7 +67,8 @@ const getType = (type, $) => {
   return result
 }
 
-const possibleTypes = ['TV', 'TV (New)', 'TV (Continuing)', 'OVAs', 'ONAs', 'Movies', 'Specials']
+const possibleTypes = ['TV', 'TVNew', 'TVCon', 'OVAs', 'ONAs', 'Movies', 'Specials']
+const possibleTV = ['TV (New)', 'TV (Continuing)']
 
 /**
  * Allows to gather seasonal information from livechart.me. <<<< LOL Nope
@@ -100,7 +106,7 @@ const getSeasons = (year, season, type) => {
         })
       } else {
         resolve({
-          type: getType(type, $),
+          [type]: getType(type, $),
         })
       }
     })
