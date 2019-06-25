@@ -105,9 +105,7 @@ const getSeasons = (year, season, type) => {
           Specials: getType('Specials', $)
         })
       } else {
-        resolve({
-          [type]: getType(type, $),
-        })
+        resolve(getType(type, $))
       }
     })
   })
